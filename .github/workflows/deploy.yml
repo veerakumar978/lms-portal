@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "file:./database/lms.db"
 
     steps:
       - name: Checkout Code
