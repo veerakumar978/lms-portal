@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Generate Prisma Client
-        run: npx prisma generate
+        run: DEBUG=* npx prisma generate
 
       - name: Build Next.js Application
         run: npx next build
