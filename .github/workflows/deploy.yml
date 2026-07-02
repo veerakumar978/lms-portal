@@ -18,9 +18,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-
       - name: Install Dependencies
         run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
       - name: Build Next.js Application
         run: npx next build
