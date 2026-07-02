@@ -52,6 +52,8 @@ jobs:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
           local-dir: ./deploy_out/
           server-dir: ./
-          dangerous-clean-html: false
+          dangerous-clean-slate: false
