@@ -1,0 +1,53 @@
+name: Build and Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Next.js Application
+        run: npx next build
+
+      - name: Prepare Hostinger Standalone Files
+        run: |
+          mkdir -p deploy_out
+          # Copy standalone output contents
+          cp -r .next/standalone/. deploy_out/
+          # Copy public and static assets needed for serving CSS/JS/images
+          cp -r public deploy_out/public
+          cp -r .next/static deploy_out/.next/static
+          # Copy SQLite database
+          mkdir -p deploy_out/database
+          if [ -f database/lms.db ]; then
+            cp database/lms.db deploy_out/database/lms.db
+          fi
+          # Create passenger restart file to trigger app reload on Hostinger
+          mkdir -p deploy_out/tmp
+          touch deploy_out/tmp/restart.txt
+
+      - name: Sync Files to Hostinger via FTP/SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./deploy_out/
+          server-dir: ./
+          dangerous-clean-html: false

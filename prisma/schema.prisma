@@ -1,0 +1,273 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.1.x", "linux-musl-openssl-3.0.x"]
+}
+
+model User {
+  id                String          @id @default(uuid())
+  name              String?
+  email             String          @unique
+  password          String
+  role              String          // SUPER_ADMIN, COLLEGE_ADMIN, PLACEMENT_OFFICER, FACULTY, AGENCY, RECRUITER, EMPLOYER, STUDENT
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  studentProfile    StudentProfile?
+  facultyProfile    FacultyProfile?
+  notifications     Notification[]
+  feedbacksSent     Feedback[]      @relation("feedbacksSent")
+  feedbacksReceived Feedback[]      @relation("feedbacksReceived")
+}
+
+model College {
+  id              String           @id @default(uuid())
+  name            String
+  code            String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  departments     Department[]
+  studentProfiles StudentProfile[]
+}
+
+model Department {
+  id              String           @id @default(uuid())
+  name            String
+  collegeId       String
+  college         College          @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  courses         Course[]
+  facultyProfiles FacultyProfile[]
+  studentProfiles StudentProfile[]
+}
+
+model Course {
+  id              String           @id @default(uuid())
+  name            String
+  code            String
+  departmentId    String
+  department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  semesters       Semester[]
+  studentProfiles StudentProfile[]
+}
+
+model Semester {
+  id              String           @id @default(uuid())
+  number          Int
+  courseId        String
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model StudentProfile {
+  id                 String                 @id @default(uuid())
+  userId             String                 @unique
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collegeId          String
+  college            College                @relation(fields: [collegeId], references: [id])
+  departmentId       String
+  department         Department             @relation(fields: [departmentId], references: [id])
+  courseId           String
+  course             Course                 @relation(fields: [courseId], references: [id])
+  semester           Int
+  cgpa               Float                  @default(0.0)
+  skills             String                 @default("[]") // JSON string of skills (e.g. ["React", "Node.js"])
+  resumeUrl          String?
+  resumeAnalysis     String?                // AI resume analysis output
+  skillGapReport     String?                // AI skill gap analysis
+  placementStatus    String                 @default("UNPLACED") // UNPLACED, PLACED, IN_PROCESS
+  
+  // Student Onboarding Process details
+  address            String?
+  careerInterests    String?                // JSON string array
+  aadhaarUrl         String?
+  certificatesUrls   String?                // JSON string array of URLs
+  onboardingStep     Int                    @default(1) // steps 1 to 4
+  isOnboarded        Boolean                @default(false)
+  varkScores         String?                // JSON score object {"V": x, "A": y, "R": z, "K": w}
+  varkAnswers        String?                // JSON user choices
+  verificationStatus String                 @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  
+  applications       Application[]
+  submissions        AssessmentSubmission[]
+  surveyResponses    SurveyResponse[]
+}
+
+model FacultyProfile {
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  designation  String?
+  subjects     String     @default("[]") // JSON string of allocated subjects (e.g. ["Database Systems"])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Company {
+  id          String       @id @default(uuid())
+  name        String
+  website     String?
+  industry    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  jobPostings JobPosting[]
+}
+
+model JobPosting {
+  id              String        @id @default(uuid())
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  requirements    String        // JSON string of required skills
+  packageSalary   Float         // Salary package in LPA
+  location        String
+  eligibilityCgpa Float         @default(0.0)
+  deadline        DateTime
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  applications    Application[]
+}
+
+model Application {
+  id            String      @id @default(uuid())
+  studentId     String
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  jobPostingId  String
+  jobPosting    JobPosting  @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  status        String      @default("PENDING") // PENDING, SHORTLISTED, REJECTED, OFFERED
+  interviewDate DateTime?
+  feedback      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model AgencyBatch {
+  id           String   @id @default(uuid())
+  agencyUserId String   // User ID of the Training Agency trainer
+  name         String   // Batch Name
+  trainerName  String
+  skills       String   // JSON string of skills being trained
+  status       String   @default("ACTIVE") // ACTIVE, COMPLETED
+  progress     Float    @default(0.0)
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Survey {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  createdById String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  questions   SurveyQuestion[]
+  responses   SurveyResponse[]
+}
+
+model SurveyQuestion {
+  id           String   @id @default(uuid())
+  surveyId     String
+  survey       Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questionText String
+  type         String   @default("TEXT") // TEXT, MCQ, SCALE
+  options      String?  // comma-separated choices for MCQ
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SurveyResponse {
+  id        String         @id @default(uuid())
+  surveyId  String
+  survey    Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers   String         // JSON string of responses
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Assessment {
+  id              String                 @id @default(uuid())
+  title           String
+  description     String?
+  durationMinutes Int                    @default(30)
+  createdById     String
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  
+  questions       AssessmentQuestion[]
+  submissions     AssessmentSubmission[]
+}
+
+model AssessmentQuestion {
+  id           String     @id @default(uuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionText String
+  optionA      String
+  optionB      String
+  optionC      String
+  optionD      String
+  correctOption String     // A, B, C, D
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model AssessmentSubmission {
+  id           String         @id @default(uuid())
+  assessmentId String
+  assessment   Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  score        Float
+  maxScore     Float
+  answers      String         // JSON string of selected answers
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Feedback {
+  id           String   @id @default(uuid())
+  fromUserId   String
+  fromUser     User     @relation("feedbacksSent", fields: [fromUserId], references: [id])
+  toUserId     String
+  toUser       User     @relation("feedbacksReceived", fields: [toUserId], references: [id])
+  content      String
+  rating       Int      @default(5)
+  category     String   // STUDENT_TO_FACULTY, FACULTY_TO_STUDENT, EMPLOYER_TO_STUDENT
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
