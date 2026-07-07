@@ -132,10 +132,10 @@ export default function LoginPage() {
             key={i}
             className="absolute w-1.5 h-1.5 bg-indigo-400/20 rounded-full animate-pulse"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              top: `${(i * 7 + 13) % 100}%`,
+              left: `${(i * 13 + 7) % 100}%`,
               animationDelay: `${i * 0.3}s`,
-              animationDuration: `${4 + Math.random() * 4}s`
+              animationDuration: `${4 + (i % 5)}s`
             }}
           />
         ))}
