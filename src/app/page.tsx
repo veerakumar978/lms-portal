@@ -12,6 +12,7 @@ import {
   Briefcase, 
   TrendingUp, 
   CheckCircle,
+  School,
   Moon,
   Sun,
   Mail,
@@ -610,6 +611,68 @@ export default function PublicHome() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Institutional Portal Section */}
+      <section className="container mx-auto px-8 py-24 border-t border-slate-200 dark:border-white/5 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Side: Graphic / Illustration */}
+          <div className="lg:col-span-5 relative h-[400px] rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-indigo-50/20 via-slate-100/50 to-purple-50/20 dark:from-indigo-950/20 dark:via-slate-900/50 dark:to-purple-950/20 shadow-xl overflow-hidden flex items-center justify-center p-8">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-25" />
+            <div className="absolute w-48 h-48 bg-indigo-500/10 rounded-full blur-[50px] pointer-events-none animate-pulse" />
+            
+            <div className="relative z-10 text-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-tr from-amber-500/15 via-indigo-600/20 to-purple-600/15 rounded-3xl flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl mx-auto">
+                <School className="w-10 h-10 text-amber-500 dark:text-amber-400" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">Institutional Workspace</h4>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Multi-Tenant Management</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Features list (matching the screenshot) */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Enterprise SaaS Suite</span>
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight"><span className="interactive-heading">For Colleges & Training Agencies</span></h2>
+              <p className="text-sm text-slate-650 dark:text-slate-355 font-bold mt-2">Turn classrooms into careers.</p>
+            </div>
+
+            <ul className="space-y-4 pt-2">
+              {[
+                { title: "College Integration", desc: "Upload rosters, run employability surveys, track outcomes." },
+                { title: "Curriculum Alignment", desc: "Real-time alerts on emerging skill gaps." },
+                { title: "Agency Dashboards", desc: "Manage batches, assessments, and milestone payments." },
+                { title: "Feedback Loops", desc: "Continuous improvement with employer & student feedback." },
+                { title: "Performance Tracking", desc: "Monitor student progress and placement rates." }
+              ].map((item, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/20">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{item.title} – </span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{item.desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="pt-6">
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/35 hover:scale-[1.02] transition-all group"
+              >
+                <span>Access Institutional Portal</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+
         </div>
       </section>
 
