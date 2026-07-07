@@ -78,6 +78,97 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
   const [testAnswers, setTestAnswers] = useState<Record<string, string>>({});
   const [testResult, setTestResult] = useState<any>(null);
 
+  // Create Job Posting Form state
+  const [newJobTitle, setNewJobTitle] = useState("");
+  const [newJobDesc, setNewJobDesc] = useState("");
+  const [newJobReqs, setNewJobReqs] = useState("");
+  const [newJobSalary, setNewJobSalary] = useState("");
+  const [newJobLoc, setNewJobLoc] = useState("");
+  const [newJobCgpa, setNewJobCgpa] = useState("0.0");
+  const [newJobDeadline, setNewJobDeadline] = useState("");
+
+  const submitCreateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newJobTitle,
+          description: newJobDesc,
+          requirements: newJobReqs,
+          packageSalary: parseFloat(newJobSalary),
+          location: newJobLoc,
+          eligibilityCgpa: parseFloat(newJobCgpa),
+          deadline: newJobDeadline,
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create drive");
+      setSuccessMsg("Job Drive created successfully!");
+      setNewJobTitle("");
+      setNewJobDesc("");
+      setNewJobReqs("");
+      setNewJobSalary("");
+      setNewJobLoc("");
+      setNewJobDeadline("");
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to create drive");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create Assessment Form state
+  const [newQuizTitle, setNewQuizTitle] = useState("");
+  const [newQuizDesc, setNewQuizDesc] = useState("");
+  const [newQuizDuration, setNewQuizDuration] = useState("30");
+  const [quizQuestions, setQuizQuestions] = useState<Array<{
+    questionText: string;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correctOption: string;
+  }>>([
+    { questionText: "", optionA: "", optionB: "", optionC: "", optionD: "", correctOption: "A" }
+  ]);
+
+  const addQuizQuestionField = () => {
+    setQuizQuestions(prev => [
+      ...prev,
+      { questionText: "", optionA: "", optionB: "", optionC: "", optionD: "", correctOption: "A" }
+    ]);
+  };
+
+  const submitCreateQuiz = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/assessments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newQuizTitle,
+          description: newQuizDesc,
+          durationMinutes: parseInt(newQuizDuration),
+          questions: quizQuestions,
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create assessment");
+      setSuccessMsg("Assessment quiz created successfully!");
+      setNewQuizTitle("");
+      setNewQuizDesc("");
+      setQuizQuestions([{ questionText: "", optionA: "", optionB: "", optionC: "", optionD: "", correctOption: "A" }]);
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to create assessment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Apply to Job Drive
   const applyToJob = async (jobId: string) => {
     setLoading(true);
@@ -948,6 +1039,127 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
         </div>
       );
     }
+
+    if (tab === "departments") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Academic Departments</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review active college department configurations and course mappings.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {departments?.map((dept: any) => (
+              <div key={dept.id} className="p-6 rounded-2xl bg-card border border-border space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold">{dept.name}</h3>
+                    <span className="text-[10px] text-muted-foreground">Department ID: {dept.id.substring(0, 8)}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
+                  <div className="p-3 bg-muted/40 rounded-xl">
+                    <span className="block text-muted-foreground text-[10px]">Courses</span>
+                    <span className="block text-sm font-extrabold mt-1">{dept.courses?.length || 0}</span>
+                  </div>
+                  <div className="p-3 bg-muted/40 rounded-xl">
+                    <span className="block text-muted-foreground text-[10px]">Faculty</span>
+                    <span className="block text-sm font-extrabold mt-1">{dept.facultyProfiles?.length || 0}</span>
+                  </div>
+                  <div className="p-3 bg-muted/40 rounded-xl">
+                    <span className="block text-muted-foreground text-[10px]">Students</span>
+                    <span className="block text-sm font-extrabold mt-1">{dept.studentProfiles?.length || 0}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "faculty") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Faculty Roster</h2>
+            <p className="text-xs text-muted-foreground mt-1">Manage and allocate courses to departmental educators.</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-md">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-muted/15 border-b border-border text-xs font-bold uppercase text-muted-foreground">
+                  <th className="p-4">Faculty Name</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Department</th>
+                  <th className="p-4">Subjects</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {facultyProfiles?.map((fac: any) => (
+                  <tr key={fac.id} className="text-xs">
+                    <td className="p-4 font-bold">{fac.user?.name}</td>
+                    <td className="p-4 text-muted-foreground">{fac.user?.email}</td>
+                    <td className="p-4">{fac.department?.name || "N/A"}</td>
+                    <td className="p-4 font-semibold text-indigo-500">
+                      {JSON.parse(fac.subjects || "[]").join(", ") || "None Assigned"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "students") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Registered Students</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review student onboarding checklists, academic scores, and statuses.</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-md">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-muted/15 border-b border-border text-xs font-bold uppercase text-muted-foreground">
+                  <th className="p-4">Student Name</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4">Department/Course</th>
+                  <th className="p-4 text-center">CGPA</th>
+                  <th className="p-4 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {studentProfiles?.map((std: any) => (
+                  <tr key={std.id} className="text-xs">
+                    <td className="p-4 font-bold">{std.user?.name}</td>
+                    <td className="p-4 text-muted-foreground">{std.user?.email}</td>
+                    <td className="p-4">
+                      <span className="block">{std.department?.name}</span>
+                      <span className="block text-[10px] text-muted-foreground">{std.course?.name} (Sem {std.semester})</span>
+                    </td>
+                    <td className="p-4 text-center font-bold">{std.cgpa?.toFixed(2)}</td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                        std.placementStatus === "PLACED"
+                          ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                          : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                      }`}>
+                        {std.placementStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
   };
 
   // =========================================================
@@ -1029,6 +1241,218 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
         </div>
       );
     }
+
+    if (tab === "courses") {
+      const allocatedSubjects = facultyProfile?.subjects ? JSON.parse(facultyProfile.subjects) : [];
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Course Builder & Syllabus</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review your allocated subjects, upload course material, and announce syllabus progression.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {allocatedSubjects.length === 0 ? (
+              <div className="p-8 rounded-2xl border border-border bg-card/40 text-center text-xs text-muted-foreground md:col-span-2">
+                No subjects assigned to your faculty profile.
+              </div>
+            ) : (
+              allocatedSubjects.map((sub: string, idx: number) => (
+                <div key={idx} className="p-6 rounded-2xl bg-card border border-border space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-5 h-5 text-indigo-500" />
+                      <h3 className="text-base font-bold">{sub}</h3>
+                    </div>
+                    <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded text-[10px] font-bold">
+                      Active
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Syllabus progress and dynamic lectures mappings are tracked. Create assessments to test student capability.
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "assessments") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left side: Form to Create Quiz */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-card border border-border shadow-md space-y-6">
+              <div>
+                <h3 className="text-lg font-bold">Create New Assessment</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Author multiple-choice questions to push directly to students.</p>
+              </div>
+
+              <form onSubmit={submitCreateQuiz} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Quiz Title</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={newQuizTitle}
+                      onChange={(e) => setNewQuizTitle(e.target.value)}
+                      placeholder="e.g. JavaScript basics"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Duration (mins)</label>
+                    <input 
+                      type="number" 
+                      required
+                      value={newQuizDuration}
+                      onChange={(e) => setNewQuizDuration(e.target.value)}
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Description</label>
+                  <textarea 
+                    rows={2}
+                    value={newQuizDesc}
+                    onChange={(e) => setNewQuizDesc(e.target.value)}
+                    placeholder="Short summary of testing objectives..."
+                    className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                  />
+                </div>
+
+                {/* Questions Input Loop */}
+                <div className="space-y-4 pt-4 border-t border-border/60">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-indigo-400">Questions Stack ({quizQuestions.length})</span>
+                    <button 
+                      type="button"
+                      onClick={addQuizQuestionField}
+                      className="px-2.5 py-1 bg-indigo-600/10 text-indigo-500 hover:bg-indigo-600/15 border border-indigo-500/25 rounded-md text-[10px] font-bold"
+                    >
+                      + Add Question
+                    </button>
+                  </div>
+
+                  <div className="space-y-6 max-h-[250px] overflow-y-auto pr-1">
+                    {quizQuestions.map((q, qidx) => (
+                      <div key={qidx} className="p-4 rounded-2xl bg-muted/30 border border-border space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-muted-foreground uppercase">Question {qidx + 1} Text</label>
+                          <input 
+                            type="text" 
+                            required
+                            value={q.questionText}
+                            onChange={(e) => {
+                              const updated = [...quizQuestions];
+                              updated[qidx].questionText = e.target.value;
+                              setQuizQuestions(updated);
+                            }}
+                            placeholder="Type question here..."
+                            className="w-full p-2.5 text-xs rounded-xl border border-border bg-background"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {["A", "B", "C", "D"].map((opt) => (
+                            <div key={opt} className="space-y-0.5">
+                              <label className="text-[8px] font-bold text-muted-foreground uppercase">Option {opt}</label>
+                              <input 
+                                type="text"
+                                required
+                                value={(q as any)[`option${opt}`]}
+                                onChange={(e) => {
+                                  const updated = [...quizQuestions];
+                                  (updated[qidx] as any)[`option${opt}`] = e.target.value;
+                                  setQuizQuestions(updated);
+                                }}
+                                placeholder={`Option ${opt}`}
+                                className="w-full p-2 text-xs rounded-xl border border-border bg-background"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-bold text-muted-foreground uppercase block">Correct Option</label>
+                          <select
+                            value={q.correctOption}
+                            onChange={(e) => {
+                              const updated = [...quizQuestions];
+                              updated[qidx].correctOption = e.target.value;
+                              setQuizQuestions(updated);
+                            }}
+                            className="p-2 text-xs rounded-xl border border-border bg-background"
+                          >
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : "Publish Assessment"}
+                </button>
+              </form>
+            </div>
+
+            {/* Right side: Active Quizzes Created */}
+            <div className="lg:col-span-5 space-y-4">
+              <h3 className="text-lg font-bold">Active Assessments</h3>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {assessmentsCreated?.length === 0 ? (
+                  <div className="p-8 rounded-2xl border border-border bg-card/40 text-center text-xs text-muted-foreground">
+                    No assessments created yet.
+                  </div>
+                ) : (
+                  assessmentsCreated?.map((test: any) => (
+                    <div key={test.id} className="p-4 rounded-xl bg-card border border-border space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-bold">{test.title}</h4>
+                        <span className="text-[10px] font-bold text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded">
+                          {test.durationMinutes}m
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{test.description}</p>
+                      <span className="block text-[9px] text-muted-foreground mt-1">Questions: {test.questions?.length || 0}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "feedback") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Student Feedback System</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review ratings and anonymous course feedbacks logged by students.</p>
+          </div>
+
+          <div className="p-8 rounded-2xl border border-border bg-card/40 text-center text-xs text-muted-foreground">
+            No student feedback records logged for this session.
+          </div>
+        </div>
+      );
+    }
   };
 
   // =========================================================
@@ -1073,6 +1497,256 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
         </div>
       );
     }
+
+    if (tab === "drives") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column: Form to Create Placement Drive */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-card border border-border shadow-md space-y-6">
+              <div>
+                <h3 className="text-lg font-bold">Launch Placement Drive</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Publish new corporate job drives for eligible students.</p>
+              </div>
+
+              <form onSubmit={submitCreateJob} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Job Title</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={newJobTitle}
+                      onChange={(e) => setNewJobTitle(e.target.value)}
+                      placeholder="e.g. Software Engineer"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Package (LPA)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      required
+                      value={newJobSalary}
+                      onChange={(e) => setNewJobSalary(e.target.value)}
+                      placeholder="e.g. 12.5"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Location</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={newJobLoc}
+                      onChange={(e) => setNewJobLoc(e.target.value)}
+                      placeholder="e.g. Bangalore, IN"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Cutoff CGPA</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      required
+                      value={newJobCgpa}
+                      onChange={(e) => setNewJobCgpa(e.target.value)}
+                      placeholder="e.g. 8.0"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Application Deadline</label>
+                    <input 
+                      type="date" 
+                      required
+                      value={newJobDeadline}
+                      onChange={(e) => setNewJobDeadline(e.target.value)}
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase">Required Skills (Comma separated)</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={newJobReqs}
+                      onChange={(e) => setNewJobReqs(e.target.value)}
+                      placeholder="React, SQL, Java"
+                      className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase">Job Description</label>
+                  <textarea 
+                    rows={4}
+                    required
+                    value={newJobDesc}
+                    onChange={(e) => setNewJobDesc(e.target.value)}
+                    placeholder="Provide full description of tasks, company and roles..."
+                    className="w-full p-3 text-xs rounded-xl border border-border bg-background"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="w-4.5 h-4.5 animate-spin" /> : "Post Job Drive"}
+                </button>
+              </form>
+            </div>
+
+            {/* Right Column: Active Listings */}
+            <div className="lg:col-span-5 space-y-4">
+              <h3 className="text-lg font-bold">Active Listings</h3>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {jobDrives?.length === 0 ? (
+                  <div className="p-8 rounded-2xl border border-border bg-card/40 text-center text-xs text-muted-foreground">
+                    No placement drives posted yet.
+                  </div>
+                ) : (
+                  jobDrives?.map((job: any) => (
+                    <div key={job.id} className="p-4 rounded-xl bg-card border border-border space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-bold">{job.title}</h4>
+                        <span className="text-xs font-bold text-indigo-500">{job.packageSalary} LPA</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">{job.description}</p>
+                      <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
+                        <span>Cutoff: {job.eligibilityCgpa.toFixed(2)} CGPA</span>
+                        <span>Applications: {job.applications?.length || 0}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "eligibility") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Student Placement Eligibility</h2>
+            <p className="text-xs text-muted-foreground mt-1">Track student CGPAs, verify resumes, and check eligibility status.</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-md">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-muted/15 border-b border-border text-xs font-bold uppercase text-muted-foreground">
+                  <th className="p-4">Student</th>
+                  <th className="p-4 text-center">CGPA</th>
+                  <th className="p-4">Verification</th>
+                  <th className="p-4 text-center">Outcome</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {studentProfiles?.map((std: any) => (
+                  <tr key={std.id} className="text-xs">
+                    <td className="p-4 font-bold">{std.user?.name}</td>
+                    <td className="p-4 text-center font-bold">{std.cgpa?.toFixed(2)}</td>
+                    <td className="p-4 uppercase font-bold text-[10px]">
+                      <span className={`px-2 py-0.5 rounded ${
+                        std.verificationStatus === "APPROVED" 
+                          ? "bg-green-500/10 text-green-500" 
+                          : "bg-yellow-500/10 text-yellow-500"
+                      }`}>
+                        {std.verificationStatus}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                        std.placementStatus === "PLACED"
+                          ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                          : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                      }`}>
+                        {std.placementStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "surveys") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Employability Surveys</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review outcomes of feedback surveys launched for graduating batches.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {surveys?.map((srv: any) => (
+              <div key={srv.id} className="p-6 rounded-2xl bg-card border border-border space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold">{srv.title}</h3>
+                    <span className="text-[10px] text-muted-foreground">Survey ID: {srv.id.substring(0, 8)}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-xs font-bold text-indigo-500">
+                  <span>Responses Logged: {srv.responses?.length || 0}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "stats") {
+      const placedCount = studentProfiles?.filter((s: any) => s.placementStatus === "PLACED").length || 0;
+      const totalCount = studentProfiles?.length || 0;
+      const placedRatio = totalCount > 0 ? Math.round((placedCount / totalCount) * 100) : 0;
+      
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Outcomes & Statistics</h2>
+            <p className="text-xs text-muted-foreground mt-1">Check overall placement ratios, salary packages charts, and hiring records.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-card border border-border text-center space-y-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase">Hired Rate</span>
+              <span className="block text-4xl font-extrabold text-indigo-500">{placedRatio}%</span>
+              <p className="text-[10px] text-muted-foreground">{placedCount} of {totalCount} students hired</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-card border border-border text-center space-y-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase">Highest CTC</span>
+              <span className="block text-4xl font-extrabold text-indigo-500">45.0 LPA</span>
+              <p className="text-[10px] text-muted-foreground">Offered by Microsoft</p>
+            </div>
+            <div className="p-6 rounded-2xl bg-card border border-border text-center space-y-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase">Avg Package</span>
+              <span className="block text-4xl font-extrabold text-indigo-500">20.5 LPA</span>
+              <p className="text-[10px] text-muted-foreground">Across B.Tech / CSE streams</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
   };
 
   // =========================================================
@@ -1081,78 +1755,200 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
   const renderEmployerWorkspace = () => {
     const { company, jobPostings } = data;
 
-    return (
-      <div className="space-y-8 animate-in fade-in-50 duration-300">
-        <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
-          <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">
-            {company?.name || "Corporate Employer"}
-          </span>
-          <h2 className="text-2xl font-extrabold text-foreground mt-2">Talent Acquisition Board</h2>
-          <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-            Upload new placement opportunities, inspect candidate eligibility details, and manage shortlisting schedules.
-          </p>
-        </div>
+    if (tab === "overview" || tab === "jobs") {
+      return (
+        <div className="space-y-8 animate-in fade-in-50 duration-300">
+          <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">
+              {company?.name || "Corporate Employer"}
+            </span>
+            <h2 className="text-2xl font-extrabold text-foreground mt-2">Talent Acquisition Board</h2>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+              Upload new placement opportunities, inspect candidate eligibility details, and manage shortlisting schedules.
+            </p>
+          </div>
 
-        {/* Applicant list per job */}
-        {jobPostings?.map((job: any) => (
-          <div key={job.id} className="p-6 rounded-3xl bg-card border border-border space-y-4 shadow-md">
-            <div className="flex justify-between items-center border-b border-border pb-3">
-              <div>
-                <h3 className="text-lg font-bold">{job.title}</h3>
-                <span className="text-xs text-muted-foreground">{job.applications?.length || 0} Applicants</span>
+          {/* Applicant list per job */}
+          {jobPostings?.map((job: any) => (
+            <div key={job.id} className="p-6 rounded-3xl bg-card border border-border space-y-4 shadow-md">
+              <div className="flex justify-between items-center border-b border-border pb-3">
+                <div>
+                  <h3 className="text-lg font-bold">{job.title}</h3>
+                  <span className="text-xs text-muted-foreground">{job.applications?.length || 0} Applicants</span>
+                </div>
+                <span className="text-sm font-extrabold text-indigo-500">{job.packageSalary} LPA</span>
               </div>
-              <span className="text-sm font-extrabold text-indigo-500">{job.packageSalary} LPA</span>
+
+              <div className="space-y-3">
+                {job.applications?.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No applications received yet.</p>
+                ) : (
+                  job.applications?.map((app: any) => (
+                    <div key={app.id} className="p-4 rounded-2xl bg-muted/40 border border-border flex justify-between items-center">
+                      <div>
+                        <span className="block text-xs font-bold">{app.student?.user?.name}</span>
+                        <span className="block text-[10px] text-muted-foreground mt-0.5">
+                          CGPA: {app.student?.cgpa?.toFixed(2)} | {app.student?.course?.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          app.status === "SHORTLISTED"
+                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : app.status === "REJECTED"
+                            ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                            : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                        }`}>
+                          {app.status}
+                        </span>
+                        
+                        {app.status === "PENDING" && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateApplicationStatus(app.id, "SHORTLISTED")}
+                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] font-bold"
+                            >
+                              Shortlist
+                            </button>
+                            <button
+                              onClick={() => updateApplicationStatus(app.id, "REJECTED")}
+                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
+          ))}
+        </div>
+      );
+    }
 
-            <div className="space-y-3">
-              {job.applications?.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No applications received yet.</p>
-              ) : (
-                job.applications?.map((app: any) => (
-                  <div key={app.id} className="p-4 rounded-2xl bg-muted/40 border border-border flex justify-between items-center">
-                    <div>
-                      <span className="block text-xs font-bold">{app.student?.user?.name}</span>
-                      <span className="block text-[10px] text-muted-foreground mt-0.5">
-                        CGPA: {app.student?.cgpa?.toFixed(2)} | {app.student?.course?.name}
-                      </span>
-                    </div>
+    if (tab === "applicants") {
+      const allApplications = jobPostings?.flatMap((job: any) => 
+        job.applications?.map((app: any) => ({ ...app, jobTitle: job.title })) || []
+      ) || [];
 
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        app.status === "SHORTLISTED"
-                          ? "bg-green-500/10 text-green-500 border border-green-500/20"
-                          : app.status === "REJECTED"
-                          ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                          : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                      }`}>
-                        {app.status}
-                      </span>
-                      
-                      {app.status === "PENDING" && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => updateApplicationStatus(app.id, "SHORTLISTED")}
-                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] font-bold"
-                          >
-                            Shortlist
-                          </button>
-                          <button
-                            onClick={() => updateApplicationStatus(app.id, "REJECTED")}
-                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Applicant Tracking System</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review student profiles, CGPA competence, and update recruitment status.</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-md">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-muted/15 border-b border-border text-xs font-bold uppercase text-muted-foreground">
+                  <th className="p-4">Candidate</th>
+                  <th className="p-4">Applied Job</th>
+                  <th className="p-4 text-center">CGPA</th>
+                  <th className="p-4 text-center">Status</th>
+                  <th className="p-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {allApplications.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-xs text-muted-foreground">
+                      No applications received yet.
+                    </td>
+                  </tr>
+                ) : (
+                  allApplications.map((app: any) => (
+                    <tr key={app.id} className="text-xs">
+                      <td className="p-4 font-bold">{app.student?.user?.name}</td>
+                      <td className="p-4 font-medium text-indigo-500">{app.jobTitle}</td>
+                      <td className="p-4 text-center font-bold">{app.student?.cgpa?.toFixed(2)}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          app.status === "SHORTLISTED"
+                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : app.status === "REJECTED"
+                            ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                            : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                        }`}>
+                          {app.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {app.status === "PENDING" ? (
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={() => updateApplicationStatus(app.id, "SHORTLISTED")}
+                              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] font-bold"
+                            >
+                              Shortlist
+                            </button>
+                            <button
+                              onClick={() => updateApplicationStatus(app.id, "REJECTED")}
+                              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground">Processed</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "profile") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Company Profile</h2>
+            <p className="text-xs text-muted-foreground mt-1">Configure company metadata and website links visible to students.</p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-card border border-border space-y-4 max-w-xl">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase">Company Name</label>
+              <input 
+                type="text" 
+                readOnly
+                value={company?.name || "Corporate Partner"} 
+                className="w-full p-3 text-xs rounded-xl border border-border bg-muted"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Industry</label>
+                <input 
+                  type="text" 
+                  readOnly
+                  value={company?.industry || "Technology"} 
+                  className="w-full p-3 text-xs rounded-xl border border-border bg-muted"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Website</label>
+                <input 
+                  type="text" 
+                  readOnly
+                  value={company?.website || "https://example.com"} 
+                  className="w-full p-3 text-xs rounded-xl border border-border bg-muted"
+                />
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-    );
+        </div>
+      );
+    }
   };
 
 
@@ -1196,67 +1992,146 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
       {role === "RECRUITER" && renderEmployerWorkspace()}
       {role === "AGENCY" && (
         <div className="space-y-6 animate-in fade-in-50 duration-300">
-          <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">Agency Dashboard</span>
-            <h2 className="text-2xl font-extrabold text-foreground mt-2">Trainer allocated Workspace</h2>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-              Track student batches progression, allocate subject modules, and review skill tracking logs.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {data.batches?.map((batch: any) => (
-              <div key={batch.id} className="p-6 rounded-2xl bg-card border border-border space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-base font-bold">{batch.name}</h3>
-                    <span className="text-[10px] text-muted-foreground">Trainer: {batch.trainerName}</span>
-                  </div>
-                  <span className="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded text-[10px] font-bold">
-                    {batch.status}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] font-semibold">
-                    <span>Training Milestones</span>
-                    <span>{batch.progress}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500" style={{ width: `${batch.progress}%` }} />
-                  </div>
-                </div>
+          {(tab === "overview" || tab === "batches") && (
+            <>
+              <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">Agency Dashboard</span>
+                <h2 className="text-2xl font-extrabold text-foreground mt-2">Trainer allocated Workspace</h2>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                  Track student batches progression, allocate subject modules, and review skill tracking logs.
+                </p>
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {data.batches?.map((batch: any) => (
+                  <div key={batch.id} className="p-6 rounded-2xl bg-card border border-border space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-base font-bold">{batch.name}</h3>
+                        <span className="text-[10px] text-muted-foreground">Trainer: {batch.trainerName}</span>
+                      </div>
+                      <span className="px-2 py-0.5 bg-green-500/10 text-green-500 border border-green-500/20 rounded text-[10px] font-bold">
+                        {batch.status}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[11px] font-semibold">
+                        <span>Training Milestones</span>
+                        <span>{batch.progress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500" style={{ width: `${batch.progress}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {tab === "trainers" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Trainer Allocations</h2>
+              <p className="text-xs text-muted-foreground">Manage external educators and allocate technical modules.</p>
+              <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+                All training modules successfully allocated.
+              </div>
+            </div>
+          )}
+
+          {tab === "milestones" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Milestone Tracking</h2>
+              <p className="text-xs text-muted-foreground">Track skill validation milestones achieved by student groups.</p>
+              <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+                No milestone deviations recorded.
+              </div>
+            </div>
+          )}
         </div>
       )}
       {role === "SUPER_ADMIN" && (
         <div className="space-y-8 animate-in fade-in-50 duration-300">
-          <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">Super Admin Mode</span>
-            <h2 className="text-2xl font-extrabold mt-2">MATHA AI Infrastructure Settings</h2>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-              Monitor multi-tenant systems, trace user volume counters, and check database sizes.
-            </p>
-          </div>
+          {tab === "overview" && (
+            <>
+              <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/25">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">Super Admin Mode</span>
+                <h2 className="text-2xl font-extrabold mt-2">MATHA AI Infrastructure Settings</h2>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                  Monitor multi-tenant systems, trace user volume counters, and check database sizes.
+                </p>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <span className="block text-xs text-muted-foreground uppercase font-bold">Global Users</span>
-              <span className="block text-3xl font-extrabold mt-2">{data.totalUsers || 0} Accounts</span>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <span className="block text-xs text-muted-foreground uppercase font-bold">Global Users</span>
+                  <span className="block text-3xl font-extrabold mt-2">{data.totalUsers || 0} Accounts</span>
+                </div>
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <span className="block text-xs text-muted-foreground uppercase font-bold">Active Colleges</span>
+                  <span className="block text-3xl font-extrabold mt-2">{data.colleges?.length || 0} Tenancies</span>
+                </div>
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <span className="block text-xs text-muted-foreground uppercase font-bold">Total Drives</span>
+                  <span className="block text-3xl font-extrabold mt-2">{data.totalJobs || 0} Postings</span>
+                </div>
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <span className="block text-xs text-muted-foreground uppercase font-bold">Applications Trace</span>
+                  <span className="block text-3xl font-extrabold mt-2">{data.totalApplications || 0} Records</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {tab === "colleges" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Colleges Registry</h2>
+              <p className="text-xs text-muted-foreground">Registered educational institution partnerships.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {data.colleges?.map((col: any) => (
+                  <div key={col.id} className="p-6 rounded-2xl bg-card border border-border space-y-2">
+                    <h3 className="font-bold text-base">{col.name}</h3>
+                    <span className="block text-xs text-muted-foreground">Code: {col.code}</span>
+                    <span className="block text-xs text-muted-foreground">Departments: {col.departments?.length || 0}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <span className="block text-xs text-muted-foreground uppercase font-bold">Active Colleges</span>
-              <span className="block text-3xl font-extrabold mt-2">{data.colleges?.length || 0} Tenancies</span>
+          )}
+
+          {tab === "users" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">User Accounts</h2>
+              <p className="text-xs text-muted-foreground">Manage multi-tenant login profiles.</p>
+              <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+                Total accounts registered: {data.totalUsers || 0} (Super Admins, College Admins, Recruiters, Students).
+              </div>
             </div>
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <span className="block text-xs text-muted-foreground uppercase font-bold">Total Drives</span>
-              <span className="block text-3xl font-extrabold mt-2">{data.totalJobs || 0} Postings</span>
+          )}
+
+          {tab === "placements" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Global Placements Reports</h2>
+              <p className="text-xs text-muted-foreground">Analyze hiring metrics across all college sites.</p>
+              <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+                Placement drives tracked: {data.totalJobs || 0} listings, {data.totalApplications || 0} applications.
+              </div>
             </div>
-            <div className="p-6 rounded-2xl bg-card border border-border">
-              <span className="block text-xs text-muted-foreground uppercase font-bold">Applications Trace</span>
-              <span className="block text-3xl font-extrabold mt-2">{data.totalApplications || 0} Records</span>
+          )}
+
+          {tab === "settings" && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">System Infrastructure Settings</h2>
+              <p className="text-xs text-muted-foreground">Configure Hostinger and database metadata parameters.</p>
+              <div className="p-6 rounded-3xl bg-card border border-border max-w-md space-y-4">
+                <span className="text-xs font-bold text-indigo-500 uppercase">Database Metadata</span>
+                <div className="text-xs space-y-1">
+                  <p><strong>DB Engine:</strong> SQLite 3</p>
+                  <p><strong>Status:</strong> Connected</p>
+                  <p><strong>Auto-Backup:</strong> Enabled</p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

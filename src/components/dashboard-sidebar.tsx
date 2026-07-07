@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { 
   LayoutDashboard, 
@@ -31,6 +31,8 @@ type NavItem = {
 export default function DashboardSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab") || "overview";
   
   const role = session?.user && (session.user as any).role;
   const userName = session?.user?.name || "Guest User";
@@ -131,7 +133,8 @@ export default function DashboardSidebar() {
       {/* Navigation Items */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navItems.map((item, idx) => {
-          const isActive = pathname === item.href || (pathname.startsWith(item.href.split('?')[0]) && item.href !== '/dashboard');
+          const itemTab = item.href.includes("?tab=") ? item.href.split("?tab=")[1] : "overview";
+          const isActive = currentTab === itemTab;
           return (
             <Link
               key={idx}
