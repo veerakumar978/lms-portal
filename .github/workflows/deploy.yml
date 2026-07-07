@@ -46,6 +46,10 @@ jobs:
           mkdir -p deploy_out/tmp
           touch deploy_out/tmp/restart.txt
 
+      - name: Clear FTP Sync State File
+        run: |
+          curl -u "${{ secrets.HOSTINGER_FTP_USERNAME }}:${{ secrets.HOSTINGER_FTP_PASSWORD }}" -Q "DELE .ftp-deploy-sync-state.json" ftp://${{ secrets.HOSTINGER_FTP_SERVER }}/ || true
+
       - name: Sync Files to Hostinger via FTP/SFTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
