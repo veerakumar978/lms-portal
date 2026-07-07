@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -44,6 +44,10 @@ const MOCK_ACCOUNTS: MockAccount[] = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [activeTab, setActiveTab] = useState<"credentials" | "otp">("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -126,20 +130,22 @@ export default function LoginPage() {
       <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-purple-500/10 dark:bg-purple-500/5 blur-[150px] pointer-events-none" />
 
       {/* Floating particles background mockup */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1.5 h-1.5 bg-indigo-400/20 rounded-full animate-pulse"
-            style={{
-              top: `${(i * 7 + 13) % 100}%`,
-              left: `${(i * 13 + 7) % 100}%`,
-              animationDelay: `${i * 0.3}s`,
-              animationDuration: `${4 + (i % 5)}s`
-            }}
-          />
-        ))}
-      </div>
+      {mounted && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1.5 h-1.5 bg-indigo-400/20 rounded-full animate-pulse"
+              style={{
+                top: `${(i * 7 + 13) % 100}%`,
+                left: `${(i * 13 + 7) % 100}%`,
+                animationDelay: `${i * 0.3}s`,
+                animationDuration: `${4 + (i % 5)}s`
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Left Column: Institutional Info */}
       <div className="w-full md:w-[40%] p-8 md:p-12 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-200 dark:border-white/5 bg-slate-100/40 dark:bg-slate-900/20 backdrop-blur-md relative z-10">
