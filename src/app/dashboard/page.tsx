@@ -8,7 +8,7 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    redirect("/login");
+    redirect("/auth/login");
   }
 
   const userId = (session.user as any).id;
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   });
 
   if (!user) {
-    redirect("/login");
+    redirect("/auth/login");
   }
 
   // Pre-fetch initial dataset depending on role to bootstrap views cleanly
