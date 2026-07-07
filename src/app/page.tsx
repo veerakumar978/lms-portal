@@ -1102,7 +1102,7 @@ export default function PublicHome() {
               }}
               className="absolute w-1 h-1 bg-amber-400 rounded-full"
               style={{
-                bottom: `${5 + Math.random() * 20}%`,
+                bottom: `${5 + ((i * 13 + 7) % 20)}%`,
                 left: `${10 + i * 11}%`,
               }}
             />
