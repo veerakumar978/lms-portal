@@ -1907,6 +1907,51 @@ export default function DashboardClient({ initialData, role, user }: DashboardCl
       );
     }
 
+    if (tab === "talent") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Talent Discovery Hub</h2>
+            <p className="text-xs text-muted-foreground mt-1">Filter, discover, and inspect student profiles across all tenancies.</p>
+          </div>
+
+          <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+            Connect to placement cells to query student databases.
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "interviews") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Interview Scheduler</h2>
+            <p className="text-xs text-muted-foreground mt-1">Configure candidate interview panels and timing logs.</p>
+          </div>
+
+          <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+            No active interviews scheduled for today.
+          </div>
+        </div>
+      );
+    }
+
+    if (tab === "offers") {
+      return (
+        <div className="space-y-6 animate-in fade-in-50 duration-300">
+          <div>
+            <h2 className="text-2xl font-bold">Offer Outbox</h2>
+            <p className="text-xs text-muted-foreground mt-1">Review corporate offer letters issued to selected students.</p>
+          </div>
+
+          <div className="p-8 bg-card border border-border rounded-3xl text-center text-xs text-muted-foreground">
+            No offers released in this recruitment session.
+          </div>
+        </div>
+      );
+    }
+
     if (tab === "profile") {
       return (
         <div className="space-y-6 animate-in fade-in-50 duration-300">
